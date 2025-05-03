@@ -1,0 +1,202 @@
+from zipfile import ZipFile
+import os
+
+# Estrutura do projeto
+project_files = {
+    "index.html": """
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Quem É Mais? - Embraza Edition</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <header>
+    <img class="logo" src="logo.png" alt="Logo Embraza" />
+    <h1>Quem É Mais?</h1>
+    <p class="subtitle">Edição Embraza — Aponte o dedo e divirta-se!</p>
+  </header>
+  <main id="app"></main>
+  <script src="script.js"></script>
+</body>
+</html>
+""",
+    "style.css": """
+body {
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  background: linear-gradient(135deg, #3e1f2f 0%, #5d2e46 100%);
+  color: #fff;
+  text-align: center;
+  margin: 0;
+  padding: 0;
+}
+
+header {
+  padding: 20px;
+}
+
+.logo {
+  width: 100px;
+}
+
+h1 {
+  font-size: 2.5rem;
+  margin: 10px 0;
+}
+
+.subtitle {
+  font-size: 1rem;
+  opacity: 0.8;
+}
+
+.card {
+  background: #6e2949;
+  color: white;
+  border-radius: 12px;
+  max-width: 500px;
+  margin: 30px auto;
+  padding: 20px;
+  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+  transform-style: preserve-3d;
+  transition: transform 0.6s ease;
+}
+
+.players-list,
+.player-options {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 10px;
+  margin-top: 20px;
+}
+
+.player-tag,
+.player-option {
+  background: #8b3a62;
+  padding: 10px 20px;
+  border-radius: 30px;
+  cursor: pointer;
+}
+
+button {
+  background: #ac466d;
+  border: none;
+  color: white;
+  padding: 10px 20px;
+  border-radius: 25px;
+  cursor: pointer;
+  margin-top: 20px;
+}
+
+button:hover {
+  background: #d75b8e;
+}
+""",
+    "script.js": """
+const app = document.getElementById("app");
+let players = [];
+let scores = {};
+let currentCategory = "sincerao";
+const questions = {
+  sincerao: [
+    "falar demais e depois se arrepender?",
+    "guardar rancor por semanas?",
+    "chegar atrasado em compromissos?"
+  ],
+  pesadao: [
+    "trair e negar até morrer?",
+    "cancelar alguém por vingança?",
+    "usar chantagem emocional?"
+  ]
+};
+
+function setup() {
+  app.innerHTML = \`
+    <div>
+      <h2>Adicione os Jogadores</h2>
+      <input type="text" id="playerName" placeholder="Nome do jogador" />
+      <button onclick="addPlayer()">Adicionar</button>
+      <div class="players-list" id="playersList"></div>
+      <button onclick="startGame()">Começar Jogo</button>
+    </div>
+  \`;
+}
+
+function addPlayer() {
+  const input = document.getElementById("playerName");
+  const name = input.value.trim();
+  if (name && !players.includes(name)) {
+    players.push(name);
+    scores[name] = 0;
+    input.value = "";
+    updatePlayersList();
+  }
+}
+
+function updatePlayersList() {
+  const list = document.getElementById("playersList");
+  list.innerHTML = "";
+  players.forEach(name => {
+    const div = document.createElement("div");
+    div.className = "player-tag";
+    div.textContent = name;
+    list.appendChild(div);
+  });
+}
+
+function startGame() {
+  if (players.length < 2) {
+    alert("Adicione pelo menos 2 jogadores!");
+    return;
+  }
+  nextQuestion();
+}
+
+function nextQuestion() {
+  const category = currentCategory;
+  const qList = questions[category];
+  const q = qList[Math.floor(Math.random() * qList.length)];
+  app.innerHTML = \`
+    <div class="card">
+      <h3>${category === "sincerao" ? "Sincerão" : "Pesadão"}</h3>
+      <p>Quem é mais provável de ${q}</p>
+      <div class="player-options">
+        ${players.map(p => \`<div class="player-option" onclick="vote('\${p}')">\${p}</div>\`).join("")}
+      </div>
+    </div>
+  \`;
+}
+
+function vote(player) {
+  scores[player]++;
+  nextQuestion();
+}
+
+setup();
+""",
+    "logo.png": None  # Placeholder, we will create an empty file for now.
+}
+
+# Diretório do projeto
+project_dir = "/mnt/data/quem-e-mais-embraza"
+os.makedirs(project_dir, exist_ok=True)
+
+# Criar arquivos
+for filename, content in project_files.items():
+    file_path = os.path.join(project_dir, filename)
+    if content is not None:
+        with open(file_path, "w", encoding="utf-8") as f:
+            f.write(content)
+    else:
+        with open(file_path, "wb") as f:
+            f.write(b"")  # Imagem vazia (logo.png)
+
+# Criar o arquivo ZIP do projeto
+zip_path = "/mnt/data/quem-e-mais-embraza.zip"
+with ZipFile(zip_path, "w") as zipf:
+    for filename in project_files:
+        zipf.write(os.path.join(project_dir, filename), arcname=filename)
+
+zip_path
